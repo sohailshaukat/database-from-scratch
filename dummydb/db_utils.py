@@ -3,12 +3,25 @@ import os
 
 class DummyDB:
 
+    index = dict()
+
     def __init__(self, filename: str = ""):
         self.filename = filename
 
     def set(self, db_id: int, value: str):
         with open(self.filename, "a") as f:
+            self.index[db_id] = f.tell()
             f.write(f"{db_id},{value}\n")
+
+    def get_2(self, db_id):
+        offset = self.index.get(db_id)
+        if offset is None:
+            return None
+        with open(self.filename, 'r') as f:
+            f.seek(offset)
+            record = f.readline()
+            curr_id, curr_value = record.split(',')
+            return curr_value.rstrip()
 
     def get(self, db_id: int) -> str | None:
         for record in self.read_reverse():
@@ -16,7 +29,6 @@ class DummyDB:
             if int(curr_id) == db_id:
                 return curr_value
         return None
-
 
     def read_reverse(self, buf_size = 8192):
         with open(self.filename, "rb") as f:
